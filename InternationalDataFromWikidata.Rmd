@@ -120,6 +120,23 @@ wikidata_countries1
 colnames(wikidata_countries1)
 ```
 
+## Getting cities and coordinates
+
+We can retrieve all instances of a city, along with their country and coordinates. 
+
+```{r}
+cities <- query_wikidata(
+'SELECT ?city ?cityLabel ?coordinate_location ?country ?countryLabel WHERE {
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+  ?city wdt:P31 wd:Q515.
+  OPTIONAL { ?city wdt:P625 ?coordinate_location. }
+  OPTIONAL { ?city wdt:P17 ?country. }
+}'
+)
+write.csv(cities, 'Data/wikidata_cities_coords.csv')
+cities
+```
+
 ## Getting coordinates for the capital city (incomplete - need to edit Wikidata)
 
 Coordinates for the capital cities would be useful for mapping. Unfortunately, modifying the example query to request the coordinates for the capital causes a timeout, so we'll need to get this information in a different way. We can look for all instances of a Capital (Q5119), but this will include capitals for both countries and top-level subdivisions within countries, such as US states:
