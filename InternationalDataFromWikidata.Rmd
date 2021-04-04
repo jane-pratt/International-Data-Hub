@@ -1,0 +1,235 @@
+---
+title: "Querying International Data With Wikidata"
+author: "Jane Pratt"
+date: "28/03/2021"
+output: 
+  html_document:
+    toc: true
+    number_sections: true
+    theme: cosmo
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+This document contains some queries to obtain international data from Wikidata and save it in CSV files. For more information on creating Wikidata  queries, see the Further Information section at the end of this document.
+
+## Libraries
+
+We'll be using WikidataQueryServiceR to call our SPARQL queries. For documentation on the library, see the Further Information section at the end of this page.
+
+```{r libraries, warning=FALSE, message=FALSE}
+library(WikidataQueryServiceR)
+library(dplyr)
+library(magrittr)
+library(stringr)
+```
+
+# Querying properties of sovereign nations
+
+## Using an example query to get a list of countries and capitals
+
+The Wikidata Query Service (https://query.wikidata.org/) provides quite a few examples, and its always worth checking whether there are examples that you can use or adapt. The 'List of present-day countries and captital(s)' example can provide us with a starting point to obtain international data with Wikidata.
+
+To view or edit the query below in the Wikidata Query Service see https://w.wiki/38w4
+
+```{r}
+Wikidata_current_country_capitals_query <-
+'
+#List of present-day countries and capital(s)
+SELECT DISTINCT ?country ?countryLabel ?capital ?capitalLabel
+WHERE
+{
+  #instance of a sovereign nation
+  ?country wdt:P31 wd:Q3624078 .
+  #not a former country
+  FILTER NOT EXISTS {?country wdt:P31 wd:Q3024240}
+  #and not an ancient civilisation (needed to exclude ancient Egypt)
+  FILTER NOT EXISTS {?country wdt:P31 wd:Q28171280}
+  OPTIONAL { ?country wdt:P36 ?capital } .
+
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
+}
+ORDER BY ?countryLabel'
+
+Wikidata_current_country_capitals <-
+  query_wikidata(Wikidata_current_country_capitals_query)
+Wikidata_current_country_capitals
+```
+
+Some countries have more than one capital city:
+
+```{r}
+Wikidata_current_country_capitals %>%
+  group_by(countryLabel) %>%
+  summarise(count = n()) %>%
+  filter(count > 1) 
+```
+
+so we'd need to use `distinct` to get a list of unique countries:
+
+```{r}
+Wikidata_current_country_capitals %>% 
+  distinct(countryLabel) 
+```
+
+## Getting some more properties of countries
+
+We can extend the example to retrieve some extra properties:
+
+- ISO 3166-1 codes can be useful are standard codes to represent each country. Many datasets use one of the 3 codes to uniquely identify countries, so they can be useful to join different datasets
+- Link to the flag for each country
+- Continent name(s) and Wikidata links - some countries can have multiple 
+
+To view or edit this query in the Wikidata Query Service, see https://w.wiki/38wD
+
+```{r}
+wikidata_countries_query1 <- '
+#Extending the List of present-day countries and capital(s) with other properties
+SELECT DISTINCT ?country ?countryLabel ?capital ?capitalLabel ?ISO_3166_alpha_2 ?ISO_3166_alpha_3 ?ISO_3166_num ?Flags_of_the_World_ID ?continent ?continentLabel ?currency ?currencyLabel ?area ?coordinate_location WHERE {
+  ?country wdt:P31 wd:Q3624078.
+  FILTER(NOT EXISTS { ?country wdt:P31 wd:Q3024240. })
+  FILTER(NOT EXISTS { ?country wdt:P31 wd:Q28171280. })
+  OPTIONAL { ?country wdt:P36 ?capital. }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+  OPTIONAL { ?country wdt:P297 ?ISO_3166_alpha_2. }
+  OPTIONAL { ?country wdt:P298 ?ISO_3166_alpha_3. }
+  OPTIONAL { ?country wdt:P299 ?ISO_3166_num. }
+  OPTIONAL { ?country wdt:P41 ?Flags_of_the_World_ID. }
+  OPTIONAL { ?country wdt:P30 ?continent. }
+  OPTIONAL { ?country wdt:P2046 ?area. }
+  OPTIONAL { ?country wdt:P38 ?currency. }
+  OPTIONAL { ?country wdt:P625 ?coordinate_location. }
+}
+ORDER BY (?countryLabel)
+'
+wikidata_countries1 <- query_wikidata(wikidata_countries_query1)
+wikidata_countries1 %<>%
+  mutate(ISO_3166_num = as.integer(ISO_3166_num)) %>%
+  mutate(wikidata_country_id = str_extract(country, 'Q[:digit:]+$'))
+
+write.csv(wikidata_countries1, 'Data/wikidata_countries1.csv')
+wikidata_countries1
+```
+
+```{r}
+colnames(wikidata_countries1)
+```
+
+## Getting cities and coordinates
+
+We can retrieve all instances of a city (including subclasses of city), along with their coordinates.
+
+To view or edit the query below in the Wikidata Query Service see https://w.wiki/3A2U
+
+```{r}
+cities <- query_wikidata(
+'SELECT ?city ?cityLabel ?coordinate_location WHERE {
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+  ?city (p:P31/ps:P31/(wdt:P279*)) wd:Q515;
+    wdt:P625 ?coordinate_location.
+}')
+write.csv(cities, 'Data/wikidata_cities_coords.csv')
+cities
+```
+
+## Getting coordinates for the capital city (incomplete - need to edit Wikidata)
+
+Coordinates for the capital cities would be useful for mapping. Unfortunately, modifying the example query to request the coordinates for the capital causes a timeout, so we'll need to get this information in a different way. We can look for all instances of a Capital (Q5119), but this will include capitals for both countries and top-level subdivisions within countries, such as US states.
+
+To view or edit the query below in the Wikidata Query Service see https://w.wiki/3A2W
+
+```{r}
+wikidata_capitals_query <- '
+SELECT ?capital ?capitalLabel ?coordinate_location ?capital_of ?capital_ofLabel ?country ?countryLabel WHERE {
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+  ?capital (p:P31/ps:P31/(wdt:P279*)) wd:Q5119; # instance of capital or subclass of capital
+  #?capital wdt:P31 wd:Q5119. #instance of capital
+  OPTIONAL { ?capital wdt:P625 ?coordinate_location. }
+  OPTIONAL { ?capital wdt:P1376 ?capital_of. }
+  OPTIONAL { ?capital wdt:P17 ?country. }
+}
+'
+wikidata_capital_coords <- query_wikidata(wikidata_capitals_query)
+wikidata_capital_coords <- wikidata_capital_coords %>% 
+  distinct() %>%
+  arrange(capitalLabel)
+write.csv(wikidata_capital_coords, 'Data/wikidata_capital_coords.csv')
+wikidata_capital_coords
+```
+
+We can now filter this data to get the coordinates for the capital city of the country:
+
+```{r}
+wikidata_country_capital_coords <- wikidata_capital_coords %>%
+  filter(capital_of == country) %>%
+  select(- c(capital_of, capital_ofLabel))
+wikidata_country_capital_coords
+```
+
+And then join our original data (current countries and their capitals) to the new data set containing the capital cities with their coordinates:
+
+```{r}
+Wikidata_current_country_capital_coords <- 
+  left_join(Wikidata_current_country_capitals, 
+            wikidata_country_capital_coords,
+            by = c('capital', 'capitalLabel', 'country', 'countryLabel'))
+
+Wikidata_current_country_capital_coords
+```
+
+It turns out that there is one country with 2 different sets of coordinates for the capital:
+
+```{r message=FALSE}
+multiple_coords <- 
+  Wikidata_current_country_capital_coords %>%
+  group_by(countryLabel, capitalLabel) %>%
+  summarise(count = n()) %>%
+  filter(count > 1) 
+Wikidata_current_country_capital_coords %>% 
+  filter(countryLabel %in% multiple_coords$countryLabel)
+```
+
+You can see the maps showing both sets of coordinates at https://www.wikidata.org/wiki/Q34126. Wikidata's data model allows for multiple (possibly conflicting) statements or claims about the same property. Looking at the map, either of the coordinates would be fine to use, so we'll use distinct to keep the first value:
+
+```{r}
+Wikidata_current_country_capital_coords %<>% 
+  distinct(country, capital, .keep_all = TRUE)
+Wikidata_current_country_capital_coords
+```
+
+This leaves us with just one country that doesn't have a capital - the Vatican City:
+
+```{r}
+missing_coords <- Wikidata_current_country_capital_coords %>%
+  filter(is.na(coordinate_location))
+missing_coords
+```
+
+At this point we can save our data:
+
+```{r}
+write.csv(Wikidata_current_country_capital_coords, 'Data/wikidata_country_capital_coords.csv')
+```
+
+
+# Further Information
+
+Wikidata Query Service User Manual
+https://www.mediawiki.org/wiki/Wikidata_Query_Service/User_Manual
+
+Tutorial on using the Wikidata Query Service: 
+https://wdqs-tutorial.toolforge.org/
+
+Documentation for WikidataQueryServiceR package:
+https://www.rdocumentation.org/packages/WikidataQueryServiceR/versions/1.0.0
+
+ISO 3166-1 Codes:
+https://en.wikipedia.org/wiki/ISO_3166-1
+
+Blog Post 'Why should you learn SPARQL? Wikidata!'
+https://longair.net/blog/2017/11/29/sparql-wikidata/
