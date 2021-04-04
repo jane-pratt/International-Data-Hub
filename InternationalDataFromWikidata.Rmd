@@ -122,38 +122,44 @@ colnames(wikidata_countries1)
 
 ## Getting cities and coordinates
 
-We can retrieve all instances of a city, along with their country and coordinates. 
+We can retrieve all instances of a city (including subclasses of city), along with their coordinates.
+
+To view or edit the query below in the Wikidata Query Service see https://w.wiki/3A2U
 
 ```{r}
 cities <- query_wikidata(
-'SELECT ?city ?cityLabel ?coordinate_location ?country ?countryLabel WHERE {
+'SELECT ?city ?cityLabel ?coordinate_location WHERE {
   SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
-  ?city wdt:P31 wd:Q515.
-  OPTIONAL { ?city wdt:P625 ?coordinate_location. }
-  OPTIONAL { ?city wdt:P17 ?country. }
-}'
-)
+  ?city (p:P31/ps:P31/(wdt:P279*)) wd:Q515;
+    wdt:P625 ?coordinate_location.
+}')
 write.csv(cities, 'Data/wikidata_cities_coords.csv')
 cities
 ```
 
 ## Getting coordinates for the capital city (incomplete - need to edit Wikidata)
 
-Coordinates for the capital cities would be useful for mapping. Unfortunately, modifying the example query to request the coordinates for the capital causes a timeout, so we'll need to get this information in a different way. We can look for all instances of a Capital (Q5119), but this will include capitals for both countries and top-level subdivisions within countries, such as US states:
+Coordinates for the capital cities would be useful for mapping. Unfortunately, modifying the example query to request the coordinates for the capital causes a timeout, so we'll need to get this information in a different way. We can look for all instances of a Capital (Q5119), but this will include capitals for both countries and top-level subdivisions within countries, such as US states.
+
+To view or edit the query below in the Wikidata Query Service see https://w.wiki/3A2W
 
 ```{r}
 wikidata_capitals_query <- '
 SELECT ?capital ?capitalLabel ?coordinate_location ?capital_of ?capital_ofLabel ?country ?countryLabel WHERE {
   SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
-  ?capital wdt:P31 wd:Q5119. #instance of capital
+  ?capital (p:P31/ps:P31/(wdt:P279*)) wd:Q5119; # instance of capital or subclass of capital
+  #?capital wdt:P31 wd:Q5119. #instance of capital
   OPTIONAL { ?capital wdt:P625 ?coordinate_location. }
   OPTIONAL { ?capital wdt:P1376 ?capital_of. }
   OPTIONAL { ?capital wdt:P17 ?country. }
 }
 '
 wikidata_capital_coords <- query_wikidata(wikidata_capitals_query)
+wikidata_capital_coords <- wikidata_capital_coords %>% 
+  distinct() %>%
+  arrange(capitalLabel)
 write.csv(wikidata_capital_coords, 'Data/wikidata_capital_coords.csv')
-wikidata_capital_coords %>% arrange(capitalLabel)
+wikidata_capital_coords
 ```
 
 We can now filter this data to get the coordinates for the capital city of the country:
@@ -196,13 +202,19 @@ Wikidata_current_country_capital_coords %<>%
 Wikidata_current_country_capital_coords
 ```
 
-Unfortunately at this point there are some capital cities with no coordinates. Further investigation shows that some of the cities do not have the Instance of ... Capital property set. I've added these for some cities but others are locked. The docs suggest that a user is able to edit these after 4 days, so we will put this code on hold for the moment.
+This leaves us with just one country that doesn't have a capital - the Vatican City:
+
 ```{r}
 missing_coords <- Wikidata_current_country_capital_coords %>%
   filter(is.na(coordinate_location))
 missing_coords
 ```
 
+At this point we can save our data:
+
+```{r}
+write.csv(Wikidata_current_country_capital_coords, 'Data/wikidata_country_capital_coords.csv')
+```
 
 
 # Further Information
