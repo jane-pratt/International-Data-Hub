@@ -1,0 +1,111 @@
+---
+title: "World Bank List of Economies and Groupings"
+author: "Jane Pratt"
+date: "07/04/2021"
+output: 
+  html_document:
+    toc: true
+    number_sections: true
+    theme: cosmo
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+In this document we'll retrieve the World Bank's list of economies broken down by region and income, as well as other groupings used by the World Bank. 
+
+## Goal
+
+The goal here is simply to obtain data that will be useful for other projects.
+
+## Libraries
+
+```{r, message = FALSE}
+library(tidyverse)
+```
+
+## Data Source
+
+Information about the data and links to download the files are available at:
+https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups
+
+Additional data sets are available such as historic data about the income groups for each economy.
+
+
+### License Information
+
+No specific license is mentioned on the download page for this data, so the default license for World Bank Data applies:
+
+[Creative Commons Attribution 4.0 (CC-BY 4.0)](https://creativecommons.org/licenses/by/4.0/)
+
+
+### Notes
+
+The data includes the following:
+
+- Economy - name of the economy (which is not necessarily  a sovereign nation - eg it could be a dependent territory)
+- Country Code - 3 character code used to refer to this economy by the World Bank. ISO 3166-1 codes are used where available
+- Region - name of the region in which the economy is located
+- Income Group - category based on the Gross National Income per capita (income levels for each group are specified on the download page)
+- Lending Category - eligibility for loans and support from the IDA (International Development Association), IBRD (International Bank for Reconstruction and Development) or Blend (a combination of the two)
+- Other:
+  * HIPC - Heavily Indebted Poor Countries
+  * EMU - Member of EU Economic & Monetary Union
+- Groups - a number of other country groupings based on region, demographics, income etc
+  * Group code
+  * Group Name
+  * Country code
+  * Country name
+
+# Loading the data
+
+Let's start by downloading the latest data:
+
+```{r, message = FALSE, warning = FALSE}
+economies_source_xl <- 'http://databank.worldbank.org/data/download/site-content/CLASS.xls'
+economies_local_xl <- 'Data/wb_economies_class.xls'
+download.file(economies_source_xl, economies_local_xl, mode = 'wb', quiet = TRUE)
+```
+
+## List of economies
+
+We can read in the data using the readxl package from the tidyverse. We'll need to skip the first 4 rows on the 'List of economies' sheet as there are some titles above the main table.
+
+```{r, message = FALSE}
+economies_data_all <- readxl::read_excel(economies_local_xl, sheet = 'List of economies', skip = 4)
+economies_data_all
+```
+
+The 'List of economies' sheet contains a table with the individual economies at the top, but below this is a section with the name and code for the groupings, then a list of notes about the data. Only the individual economies contain data in the 'Region' column.
+
+There are also blank columns in the worksheet. 
+
+Let's remove the unwanted rows and columns:
+
+```{r}
+economies_data <- economies_data_all %>%
+  select(-c(x...1, x...2, X)) %>% # Remove empty columns
+  filter(!Economy == 'x') %>% # Remove row of x's at the top of the table
+  filter(!is.na(Region)) %>% # Remove extra data from below the main table which have no region
+  mutate(Region = as.factor(Region)) %>%
+  mutate('Income group' = as.factor(`Income group`))
+economies_data
+write.csv(economies_data, 'Data/wb_economies.csv')
+```
+
+```{r}
+wb_economy_groupings <- readxl::read_excel(economies_local_xl, sheet = 'Groups')
+write.csv(wb_economy_groupings, 'Data/wb_groups.csv')
+wb_economy_groupings
+```
+
+# Further Information
+
+- [World Bank Country and Lending Groups](https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups)
+- [World Bank Data Access and Licensing](https://datacatalog.worldbank.org/public-licenses)
+
+
