@@ -37,3 +37,8 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+
+# Publicly downloadable data files
+gdp_WB.xls
+wb_economies_class.xls
