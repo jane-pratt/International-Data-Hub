@@ -137,7 +137,7 @@ write.csv(cities, 'Data/wikidata_cities_coords.csv')
 cities
 ```
 
-## Getting coordinates for the capital city (incomplete - need to edit Wikidata)
+## Getting coordinates for the capital city
 
 Coordinates for the capital cities would be useful for mapping. Unfortunately, modifying the example query to request the coordinates for the capital causes a timeout, so we'll need to get this information in a different way. We can look for all instances of a Capital (Q5119), but this will include capitals for both countries and top-level subdivisions within countries, such as US states.
 
@@ -219,17 +219,8 @@ write.csv(Wikidata_current_country_capital_coords, 'Data/wikidata_country_capita
 
 # Further Information
 
-Wikidata Query Service User Manual
-https://www.mediawiki.org/wiki/Wikidata_Query_Service/User_Manual
-
-Tutorial on using the Wikidata Query Service: 
-https://wdqs-tutorial.toolforge.org/
-
-Documentation for WikidataQueryServiceR package:
-https://www.rdocumentation.org/packages/WikidataQueryServiceR/versions/1.0.0
-
-ISO 3166-1 Codes:
-https://en.wikipedia.org/wiki/ISO_3166-1
-
-Blog Post 'Why should you learn SPARQL? Wikidata!'
-https://longair.net/blog/2017/11/29/sparql-wikidata/
+- [Wikidata Query Service User Manual](https://www.mediawiki.org/wiki/Wikidata_Query_Service/User_Manual)
+- [Tutorial on using the Wikidata Query Service](https://wdqs-tutorial.toolforge.org)
+- [Documentation for WikidataQueryServiceR package](https://www.rdocumentation.org/packages/WikidataQueryServiceR/versions/1.0.0)
+- [ISO 3166-1 Codes](https://en.wikipedia.org/wiki/ISO_3166-1)
+- [Blog Post 'Why should you learn SPARQL? Wikidata!'](https://longair.net/blog/2017/11/29/sparql-wikidata)
