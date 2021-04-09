@@ -29,7 +29,7 @@ library(magrittr)
 library(stringr)
 ```
 
-# Querying properties of sovereign nations
+# Querying properties of countries
 
 ## Using an example query to get a list of countries and capitals
 
@@ -216,6 +216,26 @@ At this point we can save our data:
 write.csv(Wikidata_current_country_capital_coords, 'Data/wikidata_country_capital_coords.csv')
 ```
 
+# Retrieving all entities with an ISO 3166-1 Country Code
+
+ISO 3166-1 defines  codes for the names of countries, dependent territories, and special areas of geographical interest. Not all of these are returned by the countries query, so we'll create a separate query returning any entity with  property P:298, which is the 3 character alphabetic ISO 3166-1 code: 
+
+```{r}
+wikidata_ISO3166_query <- '
+#All items with property P:298 (ISO 3166-1 alpha-3)
+SELECT ?item ?itemLabel ?value 
+?country ?countryLabel ?flag_image WHERE {
+  ?item wdt:P298 ?value.
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+  OPTIONAL { ?item wdt:P17 ?country. }
+  OPTIONAL { ?item wdt:P41 ?flag_image. }
+  
+}
+'
+wikidata_ISO3166 <- query_wikidata(wikidata_ISO3166_query)
+wikidata_ISO3166
+write.csv(wikidata_ISO3166, 'Data/wikidata_ISO3166.csv')
+```
 
 # Further Information
 
