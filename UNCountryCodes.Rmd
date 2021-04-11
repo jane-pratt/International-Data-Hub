@@ -1,0 +1,123 @@
+---
+title: "UN Standard Country or Area Codes for Statistical Use"
+author: "Jane Pratt"
+date: "10/04/2021"
+output: 
+  html_document:
+    toc: true
+    number_sections: true
+    theme: cosmo
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+In this document we take a look at a table of information from the Statistics Division of the United Nations. This table allows us to understand the various ways that different countries are categorised in statistics provided by the United Nations and the standard codes which are used in reporting. 
+
+## Data Source
+
+- Details about this data are available at https://unstats.un.org/unsd/methodology/m49.
+- The data can be downloaded in various formats from https://unstats.un.org/unsd/methodology/m49/overview/#
+
+### Notes about the data
+
+One of the values contains a comma (Bonaire, Sint Eustatius and Saba), causing the CSV file not to load correctly
+
+## Libraries
+
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+```
+
+# Loading the data
+
+There is no direct download for this data, so it is assumed here that the file has been downloaded to a subdirectory called Data, with the defaul name of UNSD — Methodology.xlsx
+
+```{r}
+source_file <- 'Data/UNSD — Methodology.xlsx'
+UN_Country_Classification <- readxl::read_excel(source_file)
+UN_Country_Classification
+```
+
+# Exploring the data
+
+## Count by Region
+
+```{r}
+UN_Country_Classification %>%
+  group_by(`Region Name`) %>%
+  summarise(count = n())
+```
+
+There's one country or area which doesn't have a Region Name:
+
+```{r}
+UN_Country_Classification %>%
+  filter(is.na(`Region Name`))
+```
+
+## Count by Sub-region
+
+```{r, message=FALSE}
+UN_Country_Classification %>%
+  group_by(`Region Name`, `Sub-region Name`) %>%
+  summarise(count = n())
+```
+
+# Least Developed Countries (LDC)
+
+```{r, message=FALSE}
+UN_Country_Classification %>%
+  filter(`Least Developed Countries (LDC)` == 'x') %>%
+  select(`Region Name`, `Country or Area`)
+```
+
+```{r, message=FALSE}
+UN_Country_Classification %>%
+  filter(`Least Developed Countries (LDC)` == 'x') %>%
+  group_by(`Region Name`) %>%
+  summarise(count = n())
+```
+
+# Land Locked Developing Countries (LLDC)
+
+```{r, message=FALSE}
+UN_Country_Classification %>%
+  filter(`Land Locked Developing Countries (LLDC)` == 'x') %>%
+  select(`Region Name`, `Country or Area`)
+```
+
+```{r, message=FALSE}
+UN_Country_Classification %>%
+  filter(`Land Locked Developing Countries (LLDC)` == 'x') %>%
+  group_by(`Region Name`) %>%
+  summarise(count = n())
+```
+
+# Small Island Developing States (SIDS)
+
+```{r, message=FALSE}
+UN_Country_Classification %>%
+  filter(`Small Island Developing States (SIDS)` == 'x') %>%
+  select(`Region Name`, `Country or Area`)
+```
+
+```{r, message=FALSE}
+UN_Country_Classification %>%
+  filter(`Small Island Developing States (SIDS)` == 'x') %>%
+  group_by(`Region Name`) %>%
+  summarise(count = n())
+```
+
+# Developed / Developing Countries
+
+```{r}
+table(UN_Country_Classification$`Region Name`,
+      UN_Country_Classification$`Developed / Developing Countries`)
+```
+
+
