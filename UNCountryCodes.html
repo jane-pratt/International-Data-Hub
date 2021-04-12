@@ -207,7 +207,7 @@ pre code {
 </ul>
 <div id="notes-about-the-data" class="section level3" number="1.1.1">
 <h3 number="1.1.1"><span class="header-section-number">1.1.1</span> Notes about the data</h3>
-<p>One of the values contains a comma (Bonaire, Sint Eustatius and Saba), causing the CSV file not to load correctly</p>
+<p>One of the values contains a comma (Bonaire, Sint Eustatius and Saba), causing the CSV file not to load correctly (the data is not in quotes). For this reason, we’ll be using the Excel file.</p>
 </div>
 </div>
 <div id="libraries" class="section level2" number="1.2">
@@ -217,9 +217,11 @@ pre code {
 </div>
 <div id="loading-the-data" class="section level1" number="2">
 <h1 number="2"><span class="header-section-number">2</span> Loading the data</h1>
-<p>There is no direct download for this data, so it is assumed here that the file has been downloaded to a subdirectory called Data, with the defaul name of UNSD — Methodology.xlsx</p>
+<p>There is no direct download for this data, so it is assumed here that the file has been downloaded to a subdirectory called Data, with the default name of UNSD — Methodology.xlsx. We’ll save the file in CSV format for future use.</p>
 <pre class="r"><code>source_file &lt;- &#39;Data/UNSD — Methodology.xlsx&#39;
 UN_Country_Classification &lt;- readxl::read_excel(source_file)
+write.csv(UN_Country_Classification,
+          &#39;Data/UN_Country_Classification.csv&#39;)
 UN_Country_Classification</code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
@@ -304,10 +306,11 @@ UN_Country_Classification</code></pre>
 <h1 number="6"><span class="header-section-number">6</span> Small Island Developing States (SIDS)</h1>
 <pre class="r"><code>UN_Country_Classification %&gt;%
   filter(`Small Island Developing States (SIDS)` == &#39;x&#39;) %&gt;%
-  select(`Region Name`, `Country or Area`)</code></pre>
+  select(`Region Name`, `Country or Area`) %&gt;%
+  arrange(`Country or Area`)</code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["Region Name"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Country or Area"],"name":[2],"type":["chr"],"align":["left"]}],"data":[{"1":"Africa","2":"Comoros"},{"1":"Africa","2":"Mauritius"},{"1":"Africa","2":"Seychelles"},{"1":"Africa","2":"Sao Tome and Principe"},{"1":"Africa","2":"Cabo Verde"},{"1":"Africa","2":"Guinea-Bissau"},{"1":"Americas","2":"Anguilla"},{"1":"Americas","2":"Antigua and Barbuda"},{"1":"Americas","2":"Aruba"},{"1":"Americas","2":"Bahamas"},{"1":"Americas","2":"Barbados"},{"1":"Americas","2":"Bonaire, Sint Eustatius and Saba"},{"1":"Americas","2":"British Virgin Islands"},{"1":"Americas","2":"Cuba"},{"1":"Americas","2":"Curaçao"},{"1":"Americas","2":"Dominica"},{"1":"Americas","2":"Dominican Republic"},{"1":"Americas","2":"Grenada"},{"1":"Americas","2":"Haiti"},{"1":"Americas","2":"Jamaica"},{"1":"Americas","2":"Montserrat"},{"1":"Americas","2":"Puerto Rico"},{"1":"Americas","2":"Saint Kitts and Nevis"},{"1":"Americas","2":"Saint Lucia"},{"1":"Americas","2":"Saint Vincent and the Grenadines"},{"1":"Americas","2":"Sint Maarten (Dutch part)"},{"1":"Americas","2":"Trinidad and Tobago"},{"1":"Americas","2":"United States Virgin Islands"},{"1":"Americas","2":"Belize"},{"1":"Americas","2":"Guyana"},{"1":"Americas","2":"Suriname"},{"1":"Asia","2":"Singapore"},{"1":"Asia","2":"Timor-Leste"},{"1":"Asia","2":"Maldives"},{"1":"Oceania","2":"Fiji"},{"1":"Oceania","2":"New Caledonia"},{"1":"Oceania","2":"Papua New Guinea"},{"1":"Oceania","2":"Solomon Islands"},{"1":"Oceania","2":"Vanuatu"},{"1":"Oceania","2":"Guam"},{"1":"Oceania","2":"Kiribati"},{"1":"Oceania","2":"Marshall Islands"},{"1":"Oceania","2":"Micronesia (Federated States of)"},{"1":"Oceania","2":"Nauru"},{"1":"Oceania","2":"Northern Mariana Islands"},{"1":"Oceania","2":"Palau"},{"1":"Oceania","2":"American Samoa"},{"1":"Oceania","2":"Cook Islands"},{"1":"Oceania","2":"French Polynesia"},{"1":"Oceania","2":"Niue"},{"1":"Oceania","2":"Samoa"},{"1":"Oceania","2":"Tonga"},{"1":"Oceania","2":"Tuvalu"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":["Region Name"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Country or Area"],"name":[2],"type":["chr"],"align":["left"]}],"data":[{"1":"Oceania","2":"American Samoa"},{"1":"Americas","2":"Anguilla"},{"1":"Americas","2":"Antigua and Barbuda"},{"1":"Americas","2":"Aruba"},{"1":"Americas","2":"Bahamas"},{"1":"Americas","2":"Barbados"},{"1":"Americas","2":"Belize"},{"1":"Americas","2":"Bonaire, Sint Eustatius and Saba"},{"1":"Americas","2":"British Virgin Islands"},{"1":"Africa","2":"Cabo Verde"},{"1":"Africa","2":"Comoros"},{"1":"Oceania","2":"Cook Islands"},{"1":"Americas","2":"Cuba"},{"1":"Americas","2":"Curaçao"},{"1":"Americas","2":"Dominica"},{"1":"Americas","2":"Dominican Republic"},{"1":"Oceania","2":"Fiji"},{"1":"Oceania","2":"French Polynesia"},{"1":"Americas","2":"Grenada"},{"1":"Oceania","2":"Guam"},{"1":"Africa","2":"Guinea-Bissau"},{"1":"Americas","2":"Guyana"},{"1":"Americas","2":"Haiti"},{"1":"Americas","2":"Jamaica"},{"1":"Oceania","2":"Kiribati"},{"1":"Asia","2":"Maldives"},{"1":"Oceania","2":"Marshall Islands"},{"1":"Africa","2":"Mauritius"},{"1":"Oceania","2":"Micronesia (Federated States of)"},{"1":"Americas","2":"Montserrat"},{"1":"Oceania","2":"Nauru"},{"1":"Oceania","2":"New Caledonia"},{"1":"Oceania","2":"Niue"},{"1":"Oceania","2":"Northern Mariana Islands"},{"1":"Oceania","2":"Palau"},{"1":"Oceania","2":"Papua New Guinea"},{"1":"Americas","2":"Puerto Rico"},{"1":"Americas","2":"Saint Kitts and Nevis"},{"1":"Americas","2":"Saint Lucia"},{"1":"Americas","2":"Saint Vincent and the Grenadines"},{"1":"Oceania","2":"Samoa"},{"1":"Africa","2":"Sao Tome and Principe"},{"1":"Africa","2":"Seychelles"},{"1":"Asia","2":"Singapore"},{"1":"Americas","2":"Sint Maarten (Dutch part)"},{"1":"Oceania","2":"Solomon Islands"},{"1":"Americas","2":"Suriname"},{"1":"Asia","2":"Timor-Leste"},{"1":"Oceania","2":"Tonga"},{"1":"Americas","2":"Trinidad and Tobago"},{"1":"Oceania","2":"Tuvalu"},{"1":"Americas","2":"United States Virgin Islands"},{"1":"Oceania","2":"Vanuatu"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 <pre class="r"><code>UN_Country_Classification %&gt;%

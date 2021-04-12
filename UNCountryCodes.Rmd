@@ -25,7 +25,7 @@ In this document we take a look at a table of information from the Statistics Di
 
 ### Notes about the data
 
-One of the values contains a comma (Bonaire, Sint Eustatius and Saba), causing the CSV file not to load correctly
+One of the values contains a comma (Bonaire, Sint Eustatius and Saba),  causing the CSV file not to load correctly (the data is not in quotes). For this reason, we'll be using the Excel file.
 
 ## Libraries
 
@@ -35,11 +35,13 @@ library(tidyverse)
 
 # Loading the data
 
-There is no direct download for this data, so it is assumed here that the file has been downloaded to a subdirectory called Data, with the defaul name of UNSD — Methodology.xlsx
+There is no direct download for this data, so it is assumed here that the file has been downloaded to a subdirectory called Data, with the default name of UNSD — Methodology.xlsx. We'll save the file in CSV format for future use.
 
 ```{r}
 source_file <- 'Data/UNSD — Methodology.xlsx'
 UN_Country_Classification <- readxl::read_excel(source_file)
+write.csv(UN_Country_Classification,
+          'Data/UN_Country_Classification.csv')
 UN_Country_Classification
 ```
 
@@ -103,7 +105,8 @@ UN_Country_Classification %>%
 ```{r, message=FALSE}
 UN_Country_Classification %>%
   filter(`Small Island Developing States (SIDS)` == 'x') %>%
-  select(`Region Name`, `Country or Area`)
+  select(`Region Name`, `Country or Area`) %>%
+  arrange(`Country or Area`)
 ```
 
 ```{r, message=FALSE}
